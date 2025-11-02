@@ -1,5 +1,4 @@
 using MQTTnet;
-using MQTTnet.Client;
 using System.Text;
 
 namespace MqttGateway.Tests.Helpers;
@@ -149,16 +148,6 @@ public class MqttTestClient : IAsyncDisposable
     public async Task<MqttApplicationMessage?> WaitForTopicMessageAsync(string topic, TimeSpan timeout)
     {
         return await WaitForMessageAsync(m => m.Topic == topic, timeout);
-    }
-
-    /// <summary>
-    /// Obtém o payload como string de uma mensagem
-    /// </summary>
-    public static string GetPayloadAsString(MqttApplicationMessage message)
-    {
-        return message.PayloadSegment.Count > 0 
-            ? Encoding.UTF8.GetString(message.PayloadSegment.Array!, message.PayloadSegment.Offset, message.PayloadSegment.Count)
-            : string.Empty;
     }
 
     /// <summary>

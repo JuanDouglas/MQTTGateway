@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.SignalR;
 using MqttGateway.Server.Objects;
 using MqttGateway.Server.Services.Contracts;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace MqttGateway.Server.Hubs;
 
@@ -21,8 +23,7 @@ public class UserHub : Hub
 
     public override async Task OnConnectedAsync()
     {
-        if (!Guid.TryParse(Context.UserIdentifier, out Guid userId) ||
-            !TryGetSessionId(out Guid sessionId) ||
+        if (!TryGetSessionId(out Guid sessionId) ||
             !SessionExists(sessionId))
         {
             Context.Abort();
@@ -44,13 +45,12 @@ public class UserHub : Hub
             Thread.Sleep(250);
         } while (!created);
 
-        await Clients.Caller.SendAsync("SetContext", sessionContext, CancellationToken.None);
+        await Clients.Caller.SendAsync("SetContext", JsonSerializer.Serialize(sessionContext), CancellationToken.None);
     }
 
     public override Task OnDisconnectedAsync(Exception? exception)
     {
-        if (TryGetSessionId(out Guid sessionId) &&
-            Guid.TryParse(Context.UserIdentifier, out Guid userId))
+        if (TryGetSessionId(out Guid sessionId))
         {
            _sessionManager.RemoveConnectionAsync(sessionId, Context.ConnectionId);
         }

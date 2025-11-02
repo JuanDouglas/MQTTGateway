@@ -162,7 +162,7 @@ public class SessionContextStoreTests
     }
 
     [Fact]
-    public void ThreadSafety_ConcurrentOperations_ShouldNotThrow()
+    public async Task ThreadSafety_ConcurrentOperations_ShouldNotThrow()
     {
         // Arrange
         var sessionIds = Enumerable.Range(0, 100).Select(_ => Guid.NewGuid()).ToList();
@@ -176,7 +176,6 @@ public class SessionContextStoreTests
 
         // Assert - Should not throw
         var aggregateTask = Task.WhenAll(tasks);
-        aggregateTask.Invoking(t => t.Wait(TimeSpan.FromSeconds(10)))
-            .Should().NotThrow();
+        await aggregateTask; // Should complete without throwing
     }
 }

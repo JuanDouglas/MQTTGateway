@@ -1,54 +1,69 @@
-
 using MqttGateway.Server.Hubs;
 using MqttGateway.Server.Services;
 using MqttGateway.Server.Services.Contracts;
 
-namespace MqttGateway.Server
+namespace MqttGateway.Server;
+
+public class Program
 {
-    public class Program
+    public static void Main(string[] args)
     {
-        public static void Main(string[] args)
+        var builder = WebApplication.CreateBuilder(args);
+
+        // Add services to the container.
+        builder.Services.AddSignalR();
+
+        // CORS liberar tudo
+        builder.Services.AddCors(options =>
         {
-            var builder = WebApplication.CreateBuilder(args);
-
-            // Add services to the container.
-            builder.Services.AddSignalR();
-
-            // outros services
-            builder.Services.AddSingleton<ISessionContextStore, SessionContextStore>();
-            builder.Services.AddSingleton<IMqttBrokerConnectionHandler, MqttBrokerConnectionHandler>();
-            builder.Services.AddSingleton<ISessionManager, SessionManagerService>();
-            builder.Services.AddSingleton<IMqttEventDispatcher, SignalRMessageRelay>(); // <- depois do AddSignalR()
-
-
-            builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-
-            var app = builder.Build();
-
-
-            var handler = app.Services.GetRequiredService<IMqttBrokerConnectionHandler>();
-            var dispatcher = app.Services.GetRequiredService<IMqttEventDispatcher>();
-
-            handler.SetDispatcher(dispatcher);
-
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
+            options.AddPolicy("AllowAll", policy =>
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+                policy
+                    .WithOrigins("null")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            });
+        });
 
-            app.UseHttpsRedirection();
+        // outros services
+        builder.Services.AddSingleton<ISessionContextStore, SessionContextStore>();
+        builder.Services.AddSingleton<MqttBrokerConnectionHandler>();
+        builder.Services.AddSingleton<IMqttBrokerConnectionHandler>(services => services.GetRequiredService<MqttBrokerConnectionHandler>());
+        builder.Services.AddSingleton<IMqttMessageDispatcher>(services => services.GetRequiredService<MqttBrokerConnectionHandler>());
+        builder.Services.AddSingleton<ISessionManager, SessionManagerService>();
+        builder.Services.AddSingleton<IMqttEventDispatcher, SignalRMessageRelay>(); // <- depois do AddSignalR()
 
-            app.UseAuthorization();
+        builder.Services.AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+            });
 
-            app.MapControllers();
-            app.MapHub<UserHub>("/hub");
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
+        var app = builder.Build();
 
-            app.Run();
+        app.UseHttpsRedirection();
+        app.UseRouting();
+
+        // habilita CORS
+        app.UseCors("AllowAll");
+
+        var handler = app.Services.GetRequiredService<IMqttBrokerConnectionHandler>();
+        var dispatcher = app.Services.GetRequiredService<IMqttEventDispatcher>();
+        handler.SetDispatcher(dispatcher);
+
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
         }
+
+        app.UseAuthorization();
+
+        app.MapControllers();
+        app.MapHub<UserHub>("/hub");
+        app.Run();
     }
 }

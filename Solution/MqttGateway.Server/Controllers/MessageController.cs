@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MqttGateway.Server.Services.Contracts;
+using System.ComponentModel.DataAnnotations;
 
 namespace MqttGateway.Server.Controllers;
 
@@ -15,8 +16,20 @@ public class MessageController : ControllerBase
     }
 
     [HttpPost("Send")]
-    public void SendMessage(Guid sessionId, string message, string? channel = null)
+    public async Task<IActionResult> SendMessage([FromBody] NewMeessage @new)
     {
-        _mqttDispatcher.PublishMessageAsync(sessionId, message, channel);
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        await _mqttDispatcher.PublishMessageAsync(@new.SessionId, @new.Message, @new.Channel);
+
+        return Ok();
     }
+}
+
+public record NewMeessage
+{
+    public Guid SessionId { get; set; }
+    public required string Message { get; set; }
+    public string? Channel { get; set; }
 }

@@ -1,8 +1,24 @@
 using MQTTnet;
 using MQTTnet.Server;
+using MQTTnet.Implementations;
+using MQTTnet.Diagnostics;
 using System.Net;
+using System.Linq;
 
 namespace MqttGateway.Tests.Fixtures;
+
+/// <summary>
+/// Logger simples para testes que não faz nada
+/// </summary>
+public class TestLogger : MQTTnet.Diagnostics.Logger.IMqttNetLogger
+{
+    public bool IsEnabled => false;
+    
+    public void Publish(MQTTnet.Diagnostics.Logger.MqttNetLogLevel logLevel, string source, string message, object[]? parameters, Exception? exception)
+    {
+        // Não faz nada para testes
+    }
+}
 
 /// <summary>
 /// Fixture para criar um servidor MQTT de teste em memória
@@ -27,14 +43,13 @@ public class TestMqttServerFixture : IAsyncDisposable
         // Encontrar uma porta disponível
         Port = FindAvailablePort();
 
-        var mqttFactory = new MqttFactory();
-        
         var mqttServerOptions = new MqttServerOptionsBuilder()
             .WithDefaultEndpoint()
             .WithDefaultEndpointPort(Port)
             .Build();
 
-        _mqttServer = mqttFactory.CreateMqttServer(mqttServerOptions);
+        // Criando servidor com logger nulo
+        _mqttServer = new MqttServer(mqttServerOptions, Enumerable.Empty<IMqttServerAdapter>(), new TestLogger());
         
         await _mqttServer.StartAsync();
     }

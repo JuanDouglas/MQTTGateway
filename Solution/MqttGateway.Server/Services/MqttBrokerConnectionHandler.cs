@@ -2,21 +2,22 @@
 using MqttGateway.Server.Services.Contracts;
 using MQTTnet;
 using MQTTnet.Protocol;
+using System.Collections.Concurrent;
 using System.Text;
 
 namespace MqttGateway.Server.Services;
 
 public class MqttBrokerConnectionHandler : IMqttBrokerConnectionHandler, IMqttMessageDispatcher
 {
-    private readonly Dictionary<Guid, Guid> _sessionClients = [];
+    private readonly ConcurrentDictionary<Guid, Guid> _sessionClients = new();
     private readonly MqttConnectionStringBuilder _connectionStringBuilder;
     private IMqttEventDispatcher? _mqttEventDispatcher;
     private readonly IMqttClient mqttClient;
+    private readonly SemaphoreSlim _mqttSemaphore = new(1, 1); // garante 1 operação por vez
 
     private const string baseTopic = "personal";
 
-    public MqttBrokerConnectionHandler(
-        IConfiguration configuration)
+    public MqttBrokerConnectionHandler(IConfiguration configuration)
     {
         var mqttConnectionString = configuration.GetConnectionString("MqttBroker");
 
@@ -28,44 +29,49 @@ public class MqttBrokerConnectionHandler : IMqttBrokerConnectionHandler, IMqttMe
         var factory = new MqttClientFactory();
         mqttClient = factory.CreateMqttClient();
 
-        var options = new MqttClientOptionsBuilder()
+        var optionsBuilder = new MqttClientOptionsBuilder()
                 .WithTcpServer(_connectionStringBuilder.Server, _connectionStringBuilder.Port)
                 .WithCleanSession(_connectionStringBuilder.CleanSession);
 
         if (_connectionStringBuilder.TrustedConnection.HasValue)
         {
             if (!_connectionStringBuilder.TrustedConnection.Value)
-                options = options.WithCredentials(_connectionStringBuilder.User, _connectionStringBuilder.Password); // se tiver auth
+            {
+                optionsBuilder = optionsBuilder.WithCredentials(_connectionStringBuilder.User, _connectionStringBuilder.Password);
+            }
             else
-                options = options.WithTlsOptions(new MqttClientTlsOptions()
-                {
-
-                }); // se tiver TLS
+            {
+                optionsBuilder = optionsBuilder.WithTlsOptions(new MqttClientTlsOptions());
+            }
         }
-        else
+        else if (!string.IsNullOrWhiteSpace(_connectionStringBuilder.User))
         {
-            if (!string.IsNullOrWhiteSpace(_connectionStringBuilder.User))
-                options = options.WithCredentials(_connectionStringBuilder.User, _connectionStringBuilder.Password); // se tiver auth
+            optionsBuilder = optionsBuilder.WithCredentials(_connectionStringBuilder.User, _connectionStringBuilder.Password);
         }
 
         mqttClient.ApplicationMessageReceivedAsync += HandlerMessageReceivedAsync;
-        mqttClient.ConnectAsync(options.Build()).Wait();
+        mqttClient.ConnectAsync(optionsBuilder.Build()).Wait();
     }
 
     public async Task SubscribeClientAsync(Guid clientId, Guid sessionId, CancellationToken stoppingToken = default)
     {
-        if (_sessionClients.ContainsKey(clientId))
+        if (_sessionClients.ContainsKey(sessionId))
             return;
 
         _sessionClients[sessionId] = clientId;
 
         try
         {
+            await _mqttSemaphore.WaitAsync(stoppingToken);
             await mqttClient.SubscribeAsync(GetTopicBySessionId(sessionId), cancellationToken: stoppingToken);
         }
         catch
         {
-            _sessionClients.Remove(clientId);
+            _sessionClients.TryRemove(sessionId, out _);
+        }
+        finally
+        {
+            _mqttSemaphore.Release();
         }
     }
 
@@ -74,20 +80,38 @@ public class MqttBrokerConnectionHandler : IMqttBrokerConnectionHandler, IMqttMe
         if (!_sessionClients.ContainsKey(sessionId))
             return;
 
-        await mqttClient.UnsubscribeAsync(GetTopicBySessionId(sessionId), cancellationToken: stoppingToken);
-        _sessionClients.Remove(sessionId);
+        try
+        {
+            await _mqttSemaphore.WaitAsync(stoppingToken);
+            await mqttClient.UnsubscribeAsync(GetTopicBySessionId(sessionId), cancellationToken: stoppingToken);
+            _sessionClients.TryRemove(sessionId, out _);
+        }
+        finally
+        {
+            _mqttSemaphore.Release();
+        }
     }
 
-    public Task PublishMessageAsync(Guid sessionId, string payload, string? channel = null, CancellationToken stoppingToken = default)
+    public async Task PublishMessageAsync(Guid sessionId, string payload, string? channel = null, CancellationToken stoppingToken = default)
     {
         var mqttMessage = new MqttApplicationMessageBuilder()
             .WithTopic(GetTopicBySessionId(sessionId, channel))
             .WithPayload(payload)
-            .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce) // QoS 2
+            .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce)
             .Build();
 
-        return mqttClient.PublishAsync(mqttMessage, stoppingToken);
+        await _mqttSemaphore.WaitAsync(stoppingToken);
+
+        try
+        {
+            await mqttClient.PublishAsync(mqttMessage, stoppingToken);
+        }
+        finally
+        {
+            _mqttSemaphore.Release();
+        }
     }
+
     public void SetDispatcher(IMqttEventDispatcher dispatcher)
         => _mqttEventDispatcher = dispatcher;
 
@@ -99,19 +123,18 @@ public class MqttBrokerConnectionHandler : IMqttBrokerConnectionHandler, IMqttMe
         topic = topic[(baseTopic.Length + 1)..];
 
         var subtopics = topic.Split('/');
-
-        if (subtopics.Length < 2 ||
-             !Guid.TryParse(subtopics[1], out Guid sessionId))
+        if (subtopics.Length < 2 || !Guid.TryParse(subtopics[1], out Guid sessionId))
             return Task.CompletedTask;
 
         _mqttEventDispatcher?.DispatchEvent(sessionId, payload, subtopics.Last());
-
         return Task.CompletedTask;
     }
 
     private string GetTopicBySessionId(Guid sessionId, string? channel = null)
     {
-        Guid clientId = _sessionClients[sessionId];
+        if (!_sessionClients.TryGetValue(sessionId, out Guid clientId))
+            throw new KeyNotFoundException($"SessionId {sessionId} not found");
+
         string topic = $"{baseTopic}/{clientId}/{sessionId}";
         return string.IsNullOrWhiteSpace(channel) ? topic : $"{topic}/{channel}";
     }

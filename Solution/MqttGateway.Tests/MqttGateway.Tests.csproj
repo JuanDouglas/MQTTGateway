@@ -21,7 +21,7 @@
     <PackageReference Include="Moq" Version="4.20.69" />
     <PackageReference Include="MQTTnet" Version="5.0.1.1416" />
     <PackageReference Include="MQTTnet.Server" Version="5.0.1.1416" />
-    <PackageReference Include="MQTTnet.Extensions.ManagedClient" Version="5.0.1.1416" />
+    <PackageReference Include="MQTTnet.Extensions.ManagedClient" Version="4.3.7.1207" />
     <PackageReference Include="Testcontainers" Version="3.6.0" />
     <PackageReference Include="Testcontainers.MongoDb" Version="3.6.0" />
     <PackageReference Include="xunit" Version="2.6.1" />

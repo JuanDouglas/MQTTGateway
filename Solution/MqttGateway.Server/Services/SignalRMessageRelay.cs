@@ -37,12 +37,12 @@ public class SignalRMessageRelay : IMqttEventDispatcher
 
         var clients = _sessionManager.RelayClients(sessionId);
 
-        _hubContext.Clients.Groups(clients).SendAsync(
-            CommandMethod,
-            new
-            {
-                Payload = payload,
-                Channel = channel
-            }).Wait();
+        foreach (var item in clients)
+        {
+            _hubContext.Clients.Client(item)
+                .SendAsync(
+                CommandMethod,
+                payload).Wait();
+        }
     }
 }
