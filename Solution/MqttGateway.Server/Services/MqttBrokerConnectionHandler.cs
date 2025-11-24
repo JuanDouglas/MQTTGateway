@@ -1,4 +1,5 @@
-﻿using MqttGateway.Server.Objects;
+﻿using Microsoft.Extensions.Internal;
+using MqttGateway.Server.Objects;
 using MqttGateway.Server.Services.Contracts;
 using MQTTnet;
 using MQTTnet.Protocol;
@@ -11,14 +12,18 @@ public class MqttBrokerConnectionHandler : IMqttBrokerConnectionHandler, IMqttMe
 {
     private readonly ConcurrentDictionary<Guid, Guid> _sessionClients = new();
     private readonly MqttConnectionStringBuilder _connectionStringBuilder;
+    private readonly ISystemClock _systemClock;
     private IMqttEventDispatcher? _mqttEventDispatcher;
     private readonly IMqttClient mqttClient;
     private readonly SemaphoreSlim _mqttSemaphore = new(1, 1); // garante 1 operação por vez
 
-    private const string baseTopic = "personal";
+    private const string baseTopic = "gateway";
 
-    public MqttBrokerConnectionHandler(IConfiguration configuration)
+    public MqttBrokerConnectionHandler(
+        IConfiguration configuration,
+        ISystemClock systemClock)
     {
+        _systemClock = systemClock;
         var mqttConnectionString = configuration.GetConnectionString("MqttBroker");
 
         _connectionStringBuilder = new()
@@ -94,10 +99,30 @@ public class MqttBrokerConnectionHandler : IMqttBrokerConnectionHandler, IMqttMe
 
     public async Task PublishMessageAsync(Guid sessionId, string payload, string? channel = null, CancellationToken stoppingToken = default)
     {
-        var mqttMessage = new MqttApplicationMessageBuilder()
-            .WithTopic(GetTopicBySessionId(sessionId, channel))
-            .WithPayload(payload)
-            .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.ExactlyOnce)
+        var mqttMessage = GetBuilder(sessionId, payload, channel)
+            .Build();
+
+        await _mqttSemaphore.WaitAsync(stoppingToken);
+
+        try
+        {
+            await mqttClient.PublishAsync(mqttMessage, stoppingToken);
+        }
+        finally
+        {
+            _mqttSemaphore.Release();
+        }
+    }
+
+    public async Task PublishDirectMessageAsync(
+        Guid sessionId,
+        Guid targetId,
+        string payload,
+        string? channel = null,
+        CancellationToken stoppingToken = default)
+    {
+        var mqttMessage = GetBuilder(sessionId, payload, channel)
+            .WithUserProperty("x-target-id", targetId.ToString())
             .Build();
 
         await _mqttSemaphore.WaitAsync(stoppingToken);
@@ -137,5 +162,19 @@ public class MqttBrokerConnectionHandler : IMqttBrokerConnectionHandler, IMqttMe
 
         string topic = $"{baseTopic}/{clientId}/{sessionId}";
         return string.IsNullOrWhiteSpace(channel) ? topic : $"{topic}/{channel}";
+    }
+
+    private MqttApplicationMessageBuilder GetBuilder(
+        Guid sessionId,
+        string payload,
+        string? channel = null,
+        MqttQualityOfServiceLevel qualityOfService = MqttQualityOfServiceLevel.ExactlyOnce)
+    {
+        return new MqttApplicationMessageBuilder()
+                    .WithTopic(GetTopicBySessionId(sessionId, channel))
+                    .WithPayload(payload)
+                    .WithQualityOfServiceLevel(qualityOfService)
+                    .WithUserProperty("source-service", "Gateway Service")
+                    .WithUserProperty("timestamp-utc", _systemClock.UtcNow.ToString("D"));
     }
 }

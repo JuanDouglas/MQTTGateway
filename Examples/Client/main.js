@@ -133,6 +133,7 @@ async function toggleConnection() {
 async function sendMessage() {
   const message = document.getElementById("messageText").value.trim();
   const channel = document.getElementById("channelText").value.trim() || null;
+  const targetId = document.getElementById("targetId").value.trim() || null;
 
   if (!message) {
     alert("Digite uma mensagem antes de enviar!");
@@ -156,6 +157,7 @@ async function sendMessage() {
       body: JSON.stringify({
         sessionId: currentSessionId,
         message: message,
+        targetId: targetId,
         channel: channel,
       }),
     });

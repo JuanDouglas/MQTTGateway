@@ -10,6 +10,7 @@ public interface IMqttBrokerConnectionHandler
 public interface IMqttMessageDispatcher
 {
     Task PublishMessageAsync(Guid sessionId, string payload, string? channel = null, CancellationToken stoppingToken = default);
+    Task PublishDirectMessageAsync(Guid sessionId, Guid targetId, string payload, string? channel = null, CancellationToken stoppingToken = default);
 }
 
 public interface IMqttEventDispatcher

@@ -1,4 +1,4 @@
-# 🔧 Guia de Solução de Problemas - MQTT Broker Hub
+# 🔧 Guia de Solução de Problemas - MQTT Gateway
 
 ## Problemas Comuns e Soluções
 
@@ -152,7 +152,7 @@ curl -X POST "https://localhost:8081/Messages/Send" \
 ```
 
 #### 3. Testar Cliente SignalR
-Usar o arquivo `Examples/client-example.html` para teste completo.
+Usar o arquivo `Examples/Client/index.html` para teste completo.
 
 ### 📞 Quando Pedir Ajuda
 
@@ -172,6 +172,9 @@ Se o problema persistir, forneça:
 - **Browser DevTools**: Debug de conexões SignalR
 - **Docker Desktop**: Monitorar containers
 - **Visual Studio/VS Code**: Debug da aplicação
+- **Docker Compose**: Gerenciar serviços Docker
+- **Docker CLI**: Comandos básicos de Docker
+- **Docker Desktop**: Monitorar containers
 
 ### 📚 Recursos Adicionais
 

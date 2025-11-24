@@ -1,7 +1,7 @@
-# MQTT Broker Hub - Setup Script
+# MQTT Gateway - Setup Script
 # ==============================
 
-Write-Host "🚀 MQTT Broker Hub - Script de Configuração" -ForegroundColor Green
+Write-Host "MQTT Gateway - Script de Configuração" -ForegroundColor Green
 Write-Host "=============================================" -ForegroundColor Green
 Write-Host ""
 
@@ -168,7 +168,7 @@ switch ($choice) {
 
 Write-Host ""
 Write-Host "📚 Recursos úteis:" -ForegroundColor Cyan
-Write-Host "   • Cliente de exemplo: ../Examples/client-example.html" -ForegroundColor White
+Write-Host "   • Cliente de exemplo: ../Examples/Client/index.html" -ForegroundColor White
 Write-Host "   • Documentação: ../README.md" -ForegroundColor White
 Write-Host "   • Logs do Mosquitto: ./mosquitto/log/" -ForegroundColor White
 Write-Host ""

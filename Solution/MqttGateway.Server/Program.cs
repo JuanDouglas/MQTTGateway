@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Internal;
 using MqttGateway.Server.Hubs;
 using MqttGateway.Server.Services;
 using MqttGateway.Server.Services.Contracts;
@@ -29,6 +30,7 @@ public class Program
         // outros services
         builder.Services.AddSingleton<ISessionContextStore, SessionContextStore>();
         builder.Services.AddSingleton<MqttBrokerConnectionHandler>();
+        builder.Services.AddSingleton<ISystemClock, SystemClock>();
         builder.Services.AddSingleton<IMqttBrokerConnectionHandler>(services => services.GetRequiredService<MqttBrokerConnectionHandler>());
         builder.Services.AddSingleton<IMqttMessageDispatcher>(services => services.GetRequiredService<MqttBrokerConnectionHandler>());
         builder.Services.AddSingleton<ISessionManager, SessionManagerService>();

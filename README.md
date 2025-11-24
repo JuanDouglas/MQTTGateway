@@ -1,8 +1,10 @@
-# MQTT Broker Hub
+# MQTT Gateway
 
 ## 📋 Visão Geral
 
-O MQTT Broker Hub é uma API ASP.NET Core que atua como uma ponte inteligente entre clientes SignalR e um servidor MQTT, proporcionando comunicação em tempo real full-duplex através de sessões contextualizadas e persistentes.
+O MQTT Gateway é uma API ASP.NET Core que atua como uma ponte inteligente entre clientes SignalR e um servidor MQTT, proporcionando comunicação em tempo real full-duplex através de sessões contextualizadas e persistentes.
+
+> Como o foco principal do projeto é a comunicação entre clientes e um servidor MQTT, não há validações como Autenticação e Autorização, pois o foco é apenas enviar e receber as mensagens em tempo real.
 
 ### 🎯 Características Principais
 
@@ -26,7 +28,7 @@ graph TB
         API[Cliente HTTP/API]
     end
     
-    subgraph "MQTT Broker Hub API"
+    subgraph "MQTT Gateway"
         subgraph "Camada de Apresentação"
             UH[UserHub<br/>SignalR Hub]
             MC[MessageController<br/>REST API]
@@ -290,14 +292,15 @@ Store em memória para histórico de mensagens por sessão.
 
 ### Padrão de Tópicos
 ```
-personal/{clientId}/{sessionId}/{channel?}
+personal/{clientId}/{sessionId}/{directId?}/{channel?}
 ```
 
 **Componentes:**
 - `personal`: Namespace base para todos os tópicos
 - `{clientId}`: UUID único gerado para cada sessão ativa
 - `{sessionId}`: GUID da sessão fornecido pelo cliente
-- `{channel}`: Canal opcional para categorizar mensagens
+- `{targetId}`: GUID de um cliente especifico da mensagem (opcional)
+- `{channel}`: Canal opcional para categorizar mensagens (opcional)
 
 **Exemplos:**
 ```
@@ -318,9 +321,11 @@ Envia mensagem para uma sessão específica via MQTT.
 {
   "sessionId": "550e8400-e29b-41d4-a716-446655440000",
   "message": "Conteúdo da mensagem",
+  "targetId": "12345678-1234-1234-1234-1234567890ab", // opcional
   "channel": "notifications" // opcional
 }
 ```
+> Os headers `source-service` e `timestamp-utc` sempre são enviados em Mensagens MQTT para fins de rastreabilidade. Já o header `x-target-id` somente quando é uma mensagem direta.
 
 ### SignalR Hub
 
