@@ -23,7 +23,7 @@ public class SessionManagerService : ISessionManager
         if (!_relays.TryGetValue(sessionId, out var clients))
             return [];
 
-        lock (clients) 
+        lock (clients)
         {
             return [.. clients];
         }

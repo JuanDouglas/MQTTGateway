@@ -1,5 +1,4 @@
 using MQTTnet;
-using System.Text;
 
 namespace MqttGateway.Tests.Helpers;
 
@@ -22,7 +21,7 @@ public class MqttTestClient : IAsyncDisposable
     public async Task ConnectAsync(string server, int port, string? clientId = null, string? username = null, string? password = null)
     {
         ClientId = clientId ?? Guid.NewGuid().ToString();
-        
+
         var factory = new MqttClientFactory();
         _client = factory.CreateMqttClient();
 
@@ -125,20 +124,20 @@ public class MqttTestClient : IAsyncDisposable
     /// Aguarda receber uma mensagem específica
     /// </summary>
     public async Task<MqttApplicationMessage?> WaitForMessageAsync(
-        Func<MqttApplicationMessage, bool> predicate, 
+        Func<MqttApplicationMessage, bool> predicate,
         TimeSpan timeout)
     {
         var startTime = DateTime.UtcNow;
-        
+
         while (DateTime.UtcNow - startTime < timeout)
         {
             var message = _receivedMessages.FirstOrDefault(predicate);
             if (message != null)
                 return message;
-                
+
             await Task.Delay(100);
         }
-        
+
         return null;
     }
 
@@ -164,15 +163,15 @@ public class MqttTestClient : IAsyncDisposable
     public async Task<bool> WaitForConnectionAsync(TimeSpan timeout)
     {
         var startTime = DateTime.UtcNow;
-        
+
         while (DateTime.UtcNow - startTime < timeout)
         {
             if (IsConnected)
                 return true;
-                
+
             await Task.Delay(100);
         }
-        
+
         return false;
     }
 

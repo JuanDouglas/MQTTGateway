@@ -1,9 +1,5 @@
-using FluentAssertions;
-using Microsoft.Extensions.Configuration;
-using Moq;
 using MqttGateway.Server.Services;
 using MqttGateway.Server.Services.Contracts;
-using Xunit;
 
 namespace MqttGateway.Tests.Unit.Services;
 
@@ -20,7 +16,7 @@ public class SessionManagerServiceTests
     {
         _mockMqttConnectionHandler = new Mock<IMqttBrokerConnectionHandler>();
         _mockSessionContextStore = new Mock<ISessionContextStore>();
-        
+
         _sessionManager = new SessionManagerService(
             _mockMqttConnectionHandler.Object,
             _mockSessionContextStore.Object);
@@ -42,11 +38,11 @@ public class SessionManagerServiceTests
 
         // Assert
         result.Should().BeTrue();
-        
+
         _mockMqttConnectionHandler.Verify(
             x => x.SubscribeClientAsync(It.IsAny<Guid>(), sessionId, It.IsAny<CancellationToken>()),
             Times.Once);
-        
+
         var relayClients = _sessionManager.RelayClients(sessionId);
         relayClients.Should().Contain(connectionId);
     }
@@ -125,7 +121,7 @@ public class SessionManagerServiceTests
 
         // Assert
         result.Should().BeTrue();
-        
+
         _mockMqttConnectionHandler.Verify(
             x => x.UnsubscribeClientAsync(sessionId, It.IsAny<CancellationToken>()),
             Times.Once);
@@ -159,7 +155,7 @@ public class SessionManagerServiceTests
 
         // Assert
         result.Should().BeTrue();
-        
+
         _mockMqttConnectionHandler.Verify(
             x => x.UnsubscribeClientAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
             Times.Never);
@@ -186,7 +182,7 @@ public class SessionManagerServiceTests
 
         // Assert
         result.Should().BeFalse();
-        
+
         _mockMqttConnectionHandler.Verify(
             x => x.UnsubscribeClientAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
             Times.Never);
@@ -212,7 +208,7 @@ public class SessionManagerServiceTests
 
         // Assert
         result.Should().BeFalse();
-        
+
         var relayClients = _sessionManager.RelayClients(sessionId);
         relayClients.Should().Contain(connectionId1);
         relayClients.Should().HaveCount(1);

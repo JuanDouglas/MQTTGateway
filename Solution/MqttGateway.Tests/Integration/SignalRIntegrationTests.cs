@@ -1,7 +1,5 @@
-using FluentAssertions;
 using MqttGateway.Tests.Fixtures;
 using MqttGateway.Tests.Helpers;
-using Xunit;
 
 namespace MqttGateway.Tests.Integration;
 
@@ -23,7 +21,7 @@ public class SignalRIntegrationTests : IClassFixture<MqttGatewayWebApplicationFa
         // Arrange
         var sessionId = Guid.NewGuid();
         var hubUrl = _factory.Server.BaseAddress + "hub";
-        
+
         await using var signalRHelper = new SignalRTestHelper();
 
         // Act
@@ -38,21 +36,21 @@ public class SignalRIntegrationTests : IClassFixture<MqttGatewayWebApplicationFa
     {
         // Arrange
         var hubUrl = _factory.Server.BaseAddress + "hub?sessionId=invalid-guid";
-        
+
         await using var signalRHelper = new SignalRTestHelper();
 
         // Act & Assert
         var connectTask = signalRHelper.ConnectAsync(hubUrl, Guid.Empty);
-        
+
         // Connection might fail or succeed but then be disconnected immediately
         // We'll check if it fails to stay connected
         try
         {
             await connectTask;
-            
+
             // If connection succeeds initially, wait a bit and check if it gets disconnected
             await Task.Delay(1000);
-            
+
             // Should either fail to connect or be disconnected quickly
             var isStillConnected = await signalRHelper.WaitForConnectionAsync(TimeSpan.FromSeconds(2));
             isStillConnected.Should().BeFalse();
@@ -69,7 +67,7 @@ public class SignalRIntegrationTests : IClassFixture<MqttGatewayWebApplicationFa
         // Arrange
         var sessionId = Guid.NewGuid();
         var hubUrl = _factory.Server.BaseAddress + "hub";
-        
+
         await using var client1 = new SignalRTestHelper();
         await using var client2 = new SignalRTestHelper();
         await using var client3 = new SignalRTestHelper();
@@ -91,7 +89,7 @@ public class SignalRIntegrationTests : IClassFixture<MqttGatewayWebApplicationFa
         // Arrange
         var sessionId = Guid.NewGuid();
         var hubUrl = _factory.Server.BaseAddress + "hub";
-        
+
         await using var signalRHelper = new SignalRTestHelper();
 
         // Act
@@ -99,7 +97,7 @@ public class SignalRIntegrationTests : IClassFixture<MqttGatewayWebApplicationFa
 
         // Wait for SetContext message
         var receivedContext = await signalRHelper.WaitForContextAsync(
-            _ => true, 
+            _ => true,
             TimeSpan.FromSeconds(5));
 
         // Assert
@@ -114,7 +112,7 @@ public class SignalRIntegrationTests : IClassFixture<MqttGatewayWebApplicationFa
         var sessionId1 = Guid.NewGuid();
         var sessionId2 = Guid.NewGuid();
         var hubUrl = _factory.Server.BaseAddress + "hub";
-        
+
         await using var client1 = new SignalRTestHelper();
         await using var client2 = new SignalRTestHelper();
 
@@ -128,7 +126,7 @@ public class SignalRIntegrationTests : IClassFixture<MqttGatewayWebApplicationFa
         // Assert
         client1.IsConnected.Should().BeTrue();
         client2.IsConnected.Should().BeTrue();
-        
+
         // Each should have received their own context
         client1.ReceivedContexts.Should().NotBeEmpty();
         client2.ReceivedContexts.Should().NotBeEmpty();
@@ -140,7 +138,7 @@ public class SignalRIntegrationTests : IClassFixture<MqttGatewayWebApplicationFa
         // Arrange
         var sessionId = Guid.NewGuid();
         var hubUrl = _factory.Server.BaseAddress + "hub";
-        
+
         var signalRHelper = new SignalRTestHelper();
 
         // Act
@@ -151,7 +149,7 @@ public class SignalRIntegrationTests : IClassFixture<MqttGatewayWebApplicationFa
 
         // Assert
         signalRHelper.IsConnected.Should().BeFalse();
-        
+
         await signalRHelper.DisposeAsync();
     }
 
@@ -161,7 +159,7 @@ public class SignalRIntegrationTests : IClassFixture<MqttGatewayWebApplicationFa
         // Arrange
         var sessionId = Guid.NewGuid();
         var hubUrl = _factory.Server.BaseAddress + "hub";
-        
+
         await using var signalRHelper = new SignalRTestHelper();
 
         // Act - First connection
@@ -199,7 +197,7 @@ public class SignalRIntegrationTests : IClassFixture<MqttGatewayWebApplicationFa
 
         // Wait for context
         var receivedContext = await secondClient.WaitForContextAsync(
-            _ => true, 
+            _ => true,
             TimeSpan.FromSeconds(5));
 
         // Assert
@@ -248,7 +246,7 @@ public class SignalRIntegrationTests : IClassFixture<MqttGatewayWebApplicationFa
         // Arrange
         var sessionId = Guid.NewGuid(); // GUID is always the same length, but test the parser
         var hubUrl = _factory.Server.BaseAddress + "hub";
-        
+
         await using var signalRHelper = new SignalRTestHelper();
 
         // Act & Assert
@@ -270,7 +268,7 @@ public class SignalRIntegrationTests : IClassFixture<MqttGatewayWebApplicationFa
             for (int session = 0; session < 3; session++)
             {
                 var sessionId = Guid.NewGuid();
-                
+
                 for (int client = 0; client < 3; client++)
                 {
                     var signalRClient = new SignalRTestHelper();
@@ -284,12 +282,12 @@ public class SignalRIntegrationTests : IClassFixture<MqttGatewayWebApplicationFa
 
             // Assert
             clients.Should().AllSatisfy(client => client.IsConnected.Should().BeTrue());
-            
+
             // All clients should have received context
             foreach (var client in clients)
             {
                 var receivedContext = await client.WaitForContextAsync(
-                    _ => true, 
+                    _ => true,
                     TimeSpan.FromSeconds(10));
                 receivedContext.Should().BeTrue();
             }

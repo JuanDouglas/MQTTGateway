@@ -1,9 +1,5 @@
-using FluentAssertions;
 using MqttGateway.Tests.Fixtures;
-using MqttGateway.Tests.Helpers;
 using System.Net;
-using System.Net.Http.Json;
-using Xunit;
 
 namespace MqttGateway.Tests.Integration;
 
@@ -162,7 +158,7 @@ public class ApiIntegrationTests : IClassFixture<MqttGatewayWebApplicationFactor
         var responses = await Task.WhenAll(tasks);
 
         // Assert
-        responses.Should().AllSatisfy(response => 
+        responses.Should().AllSatisfy(response =>
             response.StatusCode.Should().Be(HttpStatusCode.OK));
     }
 
@@ -206,7 +202,7 @@ public class ApiIntegrationTests : IClassFixture<MqttGatewayWebApplicationFactor
         // Arrange
         var sessionId = Guid.NewGuid();
         var message = "Test message";
-        
+
         var specialChannels = new[]
         {
             "channel-with-dashes",
@@ -229,7 +225,7 @@ public class ApiIntegrationTests : IClassFixture<MqttGatewayWebApplicationFactor
             };
 
             var response = await _client.PostAsJsonAsync("/Messages/Send", requestData);
-            response.StatusCode.Should().Be(HttpStatusCode.OK, 
+            response.StatusCode.Should().Be(HttpStatusCode.OK,
                 $"Channel '{channel}' should be accepted");
         }
     }
@@ -239,7 +235,7 @@ public class ApiIntegrationTests : IClassFixture<MqttGatewayWebApplicationFactor
     {
         // Arrange
         var tasks = new List<Task<HttpResponseMessage>>();
-        
+
         for (int i = 0; i < 5; i++)
         {
             var sessionId = Guid.NewGuid();
@@ -257,7 +253,7 @@ public class ApiIntegrationTests : IClassFixture<MqttGatewayWebApplicationFactor
         var responses = await Task.WhenAll(tasks);
 
         // Assert
-        responses.Should().AllSatisfy(response => 
+        responses.Should().AllSatisfy(response =>
             response.StatusCode.Should().Be(HttpStatusCode.OK));
     }
 }

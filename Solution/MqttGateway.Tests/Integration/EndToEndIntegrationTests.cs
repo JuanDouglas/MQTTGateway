@@ -1,8 +1,5 @@
-using FluentAssertions;
 using MqttGateway.Tests.Fixtures;
 using MqttGateway.Tests.Helpers;
-using System.Net.Http.Json;
-using Xunit;
 
 namespace MqttGateway.Tests.Integration;
 
@@ -37,7 +34,7 @@ public class EndToEndIntegrationTests : IClassFixture<MqttGatewayWebApplicationF
             {
                 ["ConnectionStrings:MqttBroker"] = _mqttServer.ConnectionString
             };
-            
+
             services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(
                 new Microsoft.Extensions.Configuration.ConfigurationBuilder()
                     .AddInMemoryCollection(configuration!)
@@ -55,7 +52,7 @@ public class EndToEndIntegrationTests : IClassFixture<MqttGatewayWebApplicationF
         {
             await _mqttTestClient.DisposeAsync();
         }
-        
+
         if (_mqttServer != null)
         {
             await _mqttServer.DisposeAsync();
@@ -206,7 +203,7 @@ public class EndToEndIntegrationTests : IClassFixture<MqttGatewayWebApplicationF
         // Send first message
         var requestData1 = new { sessionId, message = message1 };
         await _httpClient.PostAsJsonAsync("/Messages/Send", requestData1);
-        
+
         await firstClient.WaitForMessageAsync(
             msg => true, // Simplificar para evitar problemas de compilação
             TimeSpan.FromSeconds(5));
@@ -324,7 +321,7 @@ public class EndToEndIntegrationTests : IClassFixture<MqttGatewayWebApplicationF
         // Act 3 - Wait for all messages to arrive
         var allMessagesReceived = false;
         var startTime = DateTime.UtcNow;
-        
+
         while (!allMessagesReceived && DateTime.UtcNow - startTime < TimeSpan.FromSeconds(30))
         {
             if (signalRClient.ReceivedMessages.Count >= messageCount)

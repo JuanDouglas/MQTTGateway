@@ -23,7 +23,7 @@ public class SignalRTestHelper : IAsyncDisposable
     public async Task ConnectAsync(string hubUrl, Guid sessionId, Guid? userId = null)
     {
         var url = $"{hubUrl}?sessionId={sessionId}";
-        
+
         _connection = new HubConnectionBuilder()
             .WithUrl(url, options =>
             {
@@ -89,15 +89,15 @@ public class SignalRTestHelper : IAsyncDisposable
     public async Task<bool> WaitForMessageAsync(Func<object, bool> predicate, TimeSpan timeout)
     {
         var startTime = DateTime.UtcNow;
-        
+
         while (DateTime.UtcNow - startTime < timeout)
         {
             if (_receivedMessages.Any(predicate))
                 return true;
-                
+
             await Task.Delay(100);
         }
-        
+
         return false;
     }
 
@@ -107,15 +107,15 @@ public class SignalRTestHelper : IAsyncDisposable
     public async Task<bool> WaitForContextAsync(Func<object, bool> predicate, TimeSpan timeout)
     {
         var startTime = DateTime.UtcNow;
-        
+
         while (DateTime.UtcNow - startTime < timeout)
         {
             if (_receivedContexts.Any(predicate))
                 return true;
-                
+
             await Task.Delay(100);
         }
-        
+
         return false;
     }
 
@@ -125,15 +125,15 @@ public class SignalRTestHelper : IAsyncDisposable
     public async Task<bool> WaitForConnectionAsync(TimeSpan timeout)
     {
         var startTime = DateTime.UtcNow;
-        
+
         while (DateTime.UtcNow - startTime < timeout)
         {
             if (IsConnected)
                 return true;
-                
+
             await Task.Delay(100);
         }
-        
+
         return false;
     }
 
@@ -155,12 +155,12 @@ public class SignalRTestHelper : IAsyncDisposable
         {
             return JsonSerializer.Deserialize<T>(jsonElement.GetRawText());
         }
-        
+
         if (message is T directType)
         {
             return directType;
         }
-        
+
         var json = JsonSerializer.Serialize(message);
         return JsonSerializer.Deserialize<T>(json);
     }

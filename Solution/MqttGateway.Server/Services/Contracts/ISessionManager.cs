@@ -1,6 +1,4 @@
-﻿using MqttGateway.Server.Objects;
-
-namespace MqttGateway.Server.Services.Contracts;
+﻿namespace MqttGateway.Server.Services.Contracts;
 
 public interface ISessionManager
 {

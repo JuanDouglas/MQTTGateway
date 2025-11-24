@@ -1,7 +1,4 @@
-using FluentAssertions;
-using MqttGateway.Server.Objects;
 using MqttGateway.Server.Services;
-using Xunit;
 
 namespace MqttGateway.Tests.Unit.Services;
 

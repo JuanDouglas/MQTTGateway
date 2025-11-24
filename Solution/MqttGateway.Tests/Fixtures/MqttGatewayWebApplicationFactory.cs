@@ -1,10 +1,6 @@
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using MqttGateway.Server.Services.Contracts;
 using MqttGateway.Server;
+using MqttGateway.Server.Services.Contracts;
 
 namespace MqttGateway.Tests.Fixtures;
 
@@ -16,7 +12,7 @@ public class MqttGatewayWebApplicationFactory : WebApplicationFactory<Program>
     public Mock<IMqttBrokerConnectionHandler>? MockMqttBrokerConnectionHandler { get; private set; }
     public Mock<ISessionContextStore>? MockSessionContextStore { get; private set; }
     public Mock<ISessionManager>? MockSessionManager { get; private set; }
-    
+
     public bool UseMockServices { get; set; } = true;
     public Action<IServiceCollection>? ConfigureTestServices { get; set; }
 
@@ -53,7 +49,7 @@ public class MqttGatewayWebApplicationFactory : WebApplicationFactory<Program>
         });
 
         builder.UseEnvironment("Test");
-        
+
         // Suprimir logs desnecessários nos testes
         builder.ConfigureLogging(logging =>
         {

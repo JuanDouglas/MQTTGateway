@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MqttGateway.Server.Services.Contracts;
-using System.ComponentModel.DataAnnotations;
-
 namespace MqttGateway.Server.Controllers;
 
 [Route("Messages")]

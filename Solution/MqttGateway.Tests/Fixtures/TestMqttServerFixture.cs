@@ -1,9 +1,6 @@
 using MQTTnet;
 using MQTTnet.Server;
-using MQTTnet.Implementations;
-using MQTTnet.Diagnostics;
 using System.Net;
-using System.Linq;
 
 namespace MqttGateway.Tests.Fixtures;
 
@@ -13,7 +10,7 @@ namespace MqttGateway.Tests.Fixtures;
 public class TestLogger : MQTTnet.Diagnostics.Logger.IMqttNetLogger
 {
     public bool IsEnabled => false;
-    
+
     public void Publish(MQTTnet.Diagnostics.Logger.MqttNetLogLevel logLevel, string source, string message, object[]? parameters, Exception? exception)
     {
         // Não faz nada para testes
@@ -50,7 +47,7 @@ public class TestMqttServerFixture : IAsyncDisposable
 
         // Criando servidor com logger nulo
         _mqttServer = new MqttServer(mqttServerOptions, Enumerable.Empty<IMqttServerAdapter>(), new TestLogger());
-        
+
         await _mqttServer.StartAsync();
     }
 

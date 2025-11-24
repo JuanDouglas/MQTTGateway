@@ -40,7 +40,7 @@ public class MqttConnectionStringBuilder : DbConnectionStringBuilder
         set => this["TrustedConnection"] = value;
     }
 
-    public bool  CleanSession
+    public bool CleanSession
     {
         get => TryGetValue("CleanSession", out var value) && Convert.ToBoolean(value);
         set => this["CleanSession"] = value;

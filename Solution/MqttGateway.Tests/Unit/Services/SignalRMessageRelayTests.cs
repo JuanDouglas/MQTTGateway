@@ -1,11 +1,8 @@
-using FluentAssertions;
 using Microsoft.AspNetCore.SignalR;
-using Moq;
 using MqttGateway.Server.Hubs;
 using MqttGateway.Server.Objects;
 using MqttGateway.Server.Services;
 using MqttGateway.Server.Services.Contracts;
-using Xunit;
 
 namespace MqttGateway.Tests.Unit.Services;
 
@@ -30,7 +27,7 @@ public class SignalRMessageRelayTests
         _mockClientProxy = new Mock<IClientProxy>();
 
         _mockHubContext.Setup(x => x.Clients).Returns(_mockClients.Object);
-        
+
         _messageRelay = new SignalRMessageRelay(
             _mockSessionManager.Object,
             _mockSessionContextStore.Object,
@@ -79,8 +76,8 @@ public class SignalRMessageRelayTests
             Times.Once);
 
         _mockClientProxy.Verify(
-            x => x.SendAsync("ReceiveMessage", 
-                It.IsAny<object>(), 
+            x => x.SendAsync("ReceiveMessage",
+                It.IsAny<object>(),
                 default),
             Times.Once);
     }
@@ -95,7 +92,7 @@ public class SignalRMessageRelayTests
         var connectionIds = new HashSet<string> { "connection-1" };
 
         var mockContext = new Mock<SessionContext>("initial");
-        
+
         _mockSessionContextStore
             .Setup(x => x.GetContext(sessionId))
             .Returns(mockContext.Object);
@@ -162,8 +159,8 @@ public class SignalRMessageRelayTests
 
         // Assert
         _mockClientProxy.Verify(
-            x => x.SendAsync("ReceiveMessage", 
-                It.IsAny<object>(), 
+            x => x.SendAsync("ReceiveMessage",
+                It.IsAny<object>(),
                 default),
             Times.Once);
     }
@@ -248,8 +245,8 @@ public class SignalRMessageRelayTests
         act.Should().NotThrow();
 
         _mockClientProxy.Verify(
-            x => x.SendAsync("ReceiveMessage", 
-                It.IsAny<object>(), 
+            x => x.SendAsync("ReceiveMessage",
+                It.IsAny<object>(),
                 default),
             Times.Once);
     }

@@ -1,9 +1,6 @@
-using FluentAssertions;
 using MqttGateway.Tests.Fixtures;
 using MqttGateway.Tests.Helpers;
 using System.Diagnostics;
-using System.Net.Http.Json;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace MqttGateway.Tests.Performance;
@@ -40,7 +37,7 @@ public class PerformanceTests : IClassFixture<MqttGatewayWebApplicationFactory>
         // Assert
         response.IsSuccessStatusCode.Should().BeTrue();
         stopwatch.ElapsedMilliseconds.Should().BeLessThan(100, "Single API request should complete in under 100ms");
-        
+
         _output.WriteLine($"Single request took: {stopwatch.ElapsedMilliseconds}ms");
     }
 
@@ -50,13 +47,13 @@ public class PerformanceTests : IClassFixture<MqttGatewayWebApplicationFactory>
         // Arrange
         const int concurrentRequests = 100;
         const int maxAcceptableTimeMs = 5000; // 5 seconds for 100 requests
-        
+
         var sessionId = Guid.NewGuid();
         var tasks = new List<Task<HttpResponseMessage>>();
 
         // Act
         var stopwatch = Stopwatch.StartNew();
-        
+
         for (int i = 0; i < concurrentRequests; i++)
         {
             var requestData = new { sessionId, message = $"Concurrent message {i}" };
@@ -68,7 +65,7 @@ public class PerformanceTests : IClassFixture<MqttGatewayWebApplicationFactory>
 
         // Assert
         responses.Should().AllSatisfy(r => r.IsSuccessStatusCode.Should().BeTrue());
-        stopwatch.ElapsedMilliseconds.Should().BeLessThan(maxAcceptableTimeMs, 
+        stopwatch.ElapsedMilliseconds.Should().BeLessThan(maxAcceptableTimeMs,
             $"100 concurrent requests should complete in under {maxAcceptableTimeMs}ms");
 
         var throughput = (double)concurrentRequests / stopwatch.Elapsed.TotalSeconds;
@@ -84,7 +81,7 @@ public class PerformanceTests : IClassFixture<MqttGatewayWebApplicationFactory>
         // Arrange
         const int clientCount = 50;
         const int maxConnectionTimeMs = 10000; // 10 seconds for 50 connections
-        
+
         var sessionId = Guid.NewGuid();
         var hubUrl = _factory.Server.BaseAddress + "hub";
         var clients = new List<SignalRTestHelper>();
@@ -111,7 +108,7 @@ public class PerformanceTests : IClassFixture<MqttGatewayWebApplicationFactory>
                 $"{clientCount} SignalR connections should establish in under {maxConnectionTimeMs}ms");
 
             var connectionsPerSecond = (double)clientCount / stopwatch.Elapsed.TotalSeconds;
-            
+
             _output.WriteLine($"{clientCount} SignalR connections took: {stopwatch.ElapsedMilliseconds}ms");
             _output.WriteLine($"Connection rate: {connectionsPerSecond:F2} connections/second");
         }
@@ -132,7 +129,7 @@ public class PerformanceTests : IClassFixture<MqttGatewayWebApplicationFactory>
         var sessionId = Guid.NewGuid();
         var hubUrl = _factory.Server.BaseAddress + "hub";
         var message = "Latency test message";
-        
+
         await using var signalRClient = new SignalRTestHelper();
 
         // Setup
@@ -143,7 +140,7 @@ public class PerformanceTests : IClassFixture<MqttGatewayWebApplicationFactory>
         // Act
         var sendTime = DateTime.UtcNow;
         var requestData = new { sessionId, message };
-        
+
         var sendTask = _httpClient.PostAsJsonAsync("/Messages/Send", requestData);
         var receiveTask = signalRClient.WaitForMessageAsync(
             msg => signalRClient.ConvertMessage<dynamic>(msg)?.Payload?.ToString() == message,
@@ -157,7 +154,7 @@ public class PerformanceTests : IClassFixture<MqttGatewayWebApplicationFactory>
         // Assert
         receiveTask.Result.Should().BeTrue("Message should be received");
         latency.TotalMilliseconds.Should().BeLessThan(1000, "End-to-end latency should be under 1 second");
-        
+
         _output.WriteLine($"End-to-end latency: {latency.TotalMilliseconds:F2}ms");
     }
 
@@ -167,7 +164,7 @@ public class PerformanceTests : IClassFixture<MqttGatewayWebApplicationFactory>
         // Arrange
         const int connectionCycles = 10;
         const int connectionsPerCycle = 20;
-        
+
         var sessionId = Guid.NewGuid();
         var hubUrl = _factory.Server.BaseAddress + "hub";
 
@@ -177,7 +174,7 @@ public class PerformanceTests : IClassFixture<MqttGatewayWebApplicationFactory>
         for (int cycle = 0; cycle < connectionCycles; cycle++)
         {
             var clients = new List<SignalRTestHelper>();
-            
+
             try
             {
                 // Connect many clients
@@ -217,7 +214,7 @@ public class PerformanceTests : IClassFixture<MqttGatewayWebApplicationFactory>
         // Assert
         // Allow some memory increase but not excessive
         memoryIncrease.Should().BeLessThan(50 * 1024 * 1024, "Memory increase should be less than 50MB");
-        
+
         _output.WriteLine($"Initial memory: {initialMemory / 1024 / 1024:F2} MB");
         _output.WriteLine($"Final memory: {finalMemory / 1024 / 1024:F2} MB");
         _output.WriteLine($"Memory increase: {memoryIncrease / 1024 / 1024:F2} MB");
@@ -229,10 +226,10 @@ public class PerformanceTests : IClassFixture<MqttGatewayWebApplicationFactory>
         // Arrange
         const int messageCount = 1000;
         const int maxTotalTimeMs = 30000; // 30 seconds for 1000 messages
-        
+
         var sessionId = Guid.NewGuid();
         var hubUrl = _factory.Server.BaseAddress + "hub";
-        
+
         await using var signalRClient = new SignalRTestHelper();
 
         // Setup
@@ -247,7 +244,7 @@ public class PerformanceTests : IClassFixture<MqttGatewayWebApplicationFactory>
         {
             var requestData = new { sessionId, message = $"Stress test message {i}" };
             sendTasks.Add(_httpClient.PostAsJsonAsync("/Messages/Send", requestData));
-            
+
             // Add small delay to avoid overwhelming the system
             if (i % 50 == 0)
             {
@@ -260,7 +257,7 @@ public class PerformanceTests : IClassFixture<MqttGatewayWebApplicationFactory>
 
         // Wait for messages to be processed
         var startWait = DateTime.UtcNow;
-        while (signalRClient.ReceivedMessages.Count < messageCount && 
+        while (signalRClient.ReceivedMessages.Count < messageCount &&
                DateTime.UtcNow - startWait < TimeSpan.FromSeconds(30))
         {
             await Task.Delay(100);
@@ -336,7 +333,7 @@ public class PerformanceTests : IClassFixture<MqttGatewayWebApplicationFactory>
 
             // Assert
             allClients.Should().AllSatisfy(c => c.IsConnected.Should().BeTrue());
-            
+
             var connectionRate = (double)totalConnections / (connectionTime / 1000.0);
             var messageRate = (double)totalMessages / (totalTime / 1000.0);
 

@@ -1,9 +1,6 @@
-using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
-using Moq;
 using MqttGateway.Server.Controllers;
 using MqttGateway.Server.Services.Contracts;
-using Xunit;
 
 namespace MqttGateway.Tests.Unit.Controllers;
 

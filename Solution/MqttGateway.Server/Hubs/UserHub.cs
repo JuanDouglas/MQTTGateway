@@ -1,9 +1,7 @@
-﻿using Microsoft.AspNetCore.Connections;
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using MqttGateway.Server.Objects;
 using MqttGateway.Server.Services.Contracts;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace MqttGateway.Server.Hubs;
 
@@ -14,7 +12,7 @@ public class UserHub : Hub
     private readonly ISessionContextStore _sessionContextStore;
 
     public UserHub(
-        ISessionManager sessionManager, 
+        ISessionManager sessionManager,
         ISessionContextStore sessionContextStore)
     {
         _sessionManager = sessionManager;
@@ -52,7 +50,7 @@ public class UserHub : Hub
     {
         if (TryGetSessionId(out Guid sessionId))
         {
-           _sessionManager.RemoveConnectionAsync(sessionId, Context.ConnectionId);
+            _sessionManager.RemoveConnectionAsync(sessionId, Context.ConnectionId);
         }
 
         return Task.CompletedTask;
