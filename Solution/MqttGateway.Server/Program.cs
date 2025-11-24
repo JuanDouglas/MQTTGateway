@@ -19,7 +19,7 @@ public class Program
             options.AddPolicy("AllowAll", policy =>
             {
                 policy
-                    .WithOrigins("null")
+                    .WithOrigins("http://localhost:3000")
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials();
@@ -44,7 +44,6 @@ public class Program
         builder.Services.AddSwaggerGen();
         var app = builder.Build();
 
-        app.UseHttpsRedirection();
         app.UseRouting();
 
         // habilita CORS

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MQTT Gateway - Cliente de Exemplo</title>
+    <script src="https://unpkg.com/@microsoft/signalr@latest/dist/browser/signalr.min.js"></script>
+    <link rel="stylesheet" href="./main.css">
+</head>
+
+<body>
+    <h1>MQTT Gateway - Cliente de Exemplo</h1>
+
+    <div class="container">
+        <h2>Configuração da Conexão</h2>
+
+        <div class="input-group">
+            <label for="serverUrl">URL do Servidor:</label>
+            <input type="text" id="serverUrl" value="http://localhost:57323/hub"
+                placeholder="http://localhost:57323/hub">
+        </div>
+
+        <div class="input-group">
+            <label for="sessionId">Session ID:</label>
+            <input type="text" id="sessionId" placeholder="550e8400-e29b-41d4-a716-446655440000">
+            <small>Deixe vazio para gerar automaticamente</small>
+        </div>
+
+        <button id="connectBtn" onclick="toggleConnection()">Conectar</button>
+
+        <div id="connectionStatus" class="status disconnected">
+            ❌ Desconectado
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Mensagens Recebidas</h2>
+        <div id="messages" class="messages">
+            <p>Nenhuma mensagem ainda...</p>
+        </div>
+        <button onclick="clearMessages()">Limpar Mensagens</button>
+    </div>
+
+    <div class="container">
+        <h2>Enviar Mensagem</h2>
+        <div class="input-group">
+            <label for="messageText">Mensagem:</label>
+            <textarea id="messageText" rows="3" placeholder="Digite sua mensagem aqui..."></textarea>
+        </div>
+        <div class="input-group">
+            <label for="channelText">Canal (opcional):</label>
+            <input type="text" id="channelText" placeholder="notifications">
+        </div>
+        <div>
+            <button id="sendBtn" onclick="sendMessage()" disabled>Enviar</button>
+        </div>
+    </div>
+    <script src="./main.js"></script>
+</body>
+
+</html>

@@ -9,7 +9,7 @@ public class SessionContextStore : ISessionContextStore
 
     public SessionContextStore()
     {
-        _sessions = new Dictionary<Guid, SessionContext>();
+        _sessions = [];
     }
 
     public bool CreateContext(Guid sessionId, string start)
@@ -23,10 +23,10 @@ public class SessionContextStore : ISessionContextStore
 
     public SessionContext? GetContext(Guid sessionId)
     {
-        if (!_sessions.ContainsKey(sessionId))
+        if (!_sessions.TryGetValue(sessionId, out SessionContext? value))
             return null;
 
-        return _sessions[sessionId];
+        return value;
     }
 
     public bool RemoveContext(Guid sessionId)
